@@ -81,7 +81,7 @@ class StudentPage extends StatelessWidget {
 
                   const Center(
                     child: Text(
-                      'Tomás Vilas Boas',
+                      'Eduarda Mourão',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 24,
