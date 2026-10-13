@@ -2,205 +2,201 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const StudentCardApp());
+  runApp(const StudentListApp());
 }
 
-class StudentCardApp extends StatelessWidget {
-  const StudentCardApp({super.key});
+class StudentListApp extends StatelessWidget {
+  const StudentListApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Cartão de Estudante',
+      title: 'Lista de Estudantes',
       theme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: Colors.teal,
-        scaffoldBackgroundColor: const Color(0xFFF3F6FA),
+        scaffoldBackgroundColor: const Color(0xFFF2F5F9),
       ),
-      home: const StudentPage(),
+      home: const StudentsPage(),
     );
   }
 }
 
-class StudentPage extends StatelessWidget {
-  const StudentPage({super.key});
+class StudentsPage extends StatelessWidget {
+  const StudentsPage({super.key});
+
+  final List<Map<String, String>> students = const [
+    {
+      'nome': 'Rita Silva',
+      'curso': 'Desenvolvimento de Software',
+    },
+    {
+      'nome': 'João Costa',
+      'curso': 'Redes e Sistemas',
+    },
+    {
+      'nome': 'Inês Lopes',
+      'curso': 'Cibersegurança',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF101A2C),
+        backgroundColor: const Color(0xFF10243A),
         foregroundColor: Colors.white,
         centerTitle: true,
         title: const Text(
-          'Cartão de Estudante',
+          'Lista de Estudantes',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Card(
-            elevation: 5,
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
+
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              color: Color(0xFF10243A),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+              ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'PERFIL DO ESTUDANTE',
-                    style: TextStyle(
-                      color: Colors.teal,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                      fontSize: 12,
-                    ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Os nossos estudantes',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 23,
+                    fontWeight: FontWeight.bold,
                   ),
-
-                  const SizedBox(height: 24),
-
-                  const Center(
-                    child: CircleAvatar(
-                      radius: 48,
-                      backgroundColor: Color(0xFFD9F3EF),
-                      child: Icon(
-                        Icons.person,
-                        size: 58,
-                        color: Color(0xFF087F73),
-                      ),
-                    ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Consulta os estudantes e os seus cursos.',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
                   ),
+                ),
+              ],
+            ),
+          ),
 
-                  const SizedBox(height: 20),
-
-                  const Center(
-                    child: Text(
-                      'Eduarda Mourão',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF101A2C),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  const Center(
-                    child: Text(
-                      'Desenvolvimento de Software',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.blueGrey,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  const Divider(),
-
-                  const SizedBox(height: 12),
-
-                  const Row(
-                    children: [
-                      Icon(
-                        Icons.school_outlined,
-                        color: Colors.teal,
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Estudante',
-                          style: TextStyle(fontSize: 15),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  const Row(
-                    children: [
-                      Icon(
-                        Icons.verified_user_outlined,
-                        color: Colors.teal,
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Cartão de estudante digital',
-                          style: TextStyle(fontSize: 15),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Perfil do estudante'),
-                            content: const Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                Text('Nome: Eduarda Mourão'),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Curso: Desenvolvimento de Software',
-                                ),
-                                SizedBox(height: 8),
-                                Text('Estado: Estudante'),
-                                 SizedBox(height: 8),
-                                Text(
-                                  'Número: 67',
-                                ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context),
-                                child: const Text('Fechar'),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.person_outline),
-                      label: const Text('Ver perfil'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF087F73),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+            child: Text(
+              'ESTUDANTES INSCRITOS',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+                color: Colors.teal,
               ),
             ),
           ),
-        ),
+
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: students.length,
+              itemBuilder: (context, index) {
+                final student = students[index];
+                final nome = student['nome']!;
+                final curso = student['curso']!;
+
+                return Card(
+                  elevation: 2,
+                  color: Colors.white,
+                  margin: const EdgeInsets.only(bottom: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+
+                    leading: CircleAvatar(
+                      radius: 27,
+                      backgroundColor: Colors.teal.shade50,
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.teal,
+                        size: 30,
+                      ),
+                    ),
+
+                    title: Text(
+                      nome,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: Text(curso),
+                    ),
+
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: Colors.teal,
+                    ),
+
+                    onTap: () {
+                      ScaffoldMessenger.of(context)
+                        ..hideCurrentSnackBar()
+                        ..showSnackBar(
+                          SnackBar(
+                            content: Text(nome),
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: 1,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            label: 'Início',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.people),
+            label: 'Estudantes',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            label: 'Definições',
+          ),
+        ],
+        onDestinationSelected: (index) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                ['Início', 'Estudantes', 'Definições'][index],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
