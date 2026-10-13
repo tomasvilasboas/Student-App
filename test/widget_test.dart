@@ -1,18 +1,33 @@
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:student_app/main.dart';
 
 void main() {
-  testWidgets('Messi vote counter test', (WidgetTester tester) async {
-    await tester.pumpWidget(const MessiApp());
+  testWidgets(
+    'Teste da lista de estudantes de Programação',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const StudentListApp());
 
-    expect(find.text('0'), findsOneWidget);
+      // Verificar o título da aplicação
+      expect(find.text('Lista de Estudantes'), findsOneWidget);
 
-    await tester.tap(find.text('VOTAR MESSI'));
-    await tester.pump();
+      // Verificar o título da secção
+      expect(
+        find.text('Estudantes de Programação'),
+        findsOneWidget,
+      );
 
-    expect(find.text('1'), findsOneWidget);
-  });
+      // Verificar os estudantes do curso de Programação
+      expect(find.text('Rita'), findsOneWidget);
+      expect(find.text('Inês'), findsOneWidget);
+
+      // João pertence ao curso de Redes e não deve aparecer
+      expect(find.text('João'), findsNothing);
+
+      // Verificar o total de estudantes filtrados
+      expect(
+        find.text('Total de estudantes: 2'),
+        findsOneWidget,
+      );
+    },
+  );
 }

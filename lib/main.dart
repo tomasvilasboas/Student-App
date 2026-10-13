@@ -1,8 +1,20 @@
-
 import 'package:flutter/material.dart';
 
 void main() {
   runApp(const StudentListApp());
+}
+
+// 1. Criar a classe Student
+class Student {
+  final int id;
+  final String name;
+  final String course;
+
+  const Student({
+    required this.id,
+    required this.name,
+    required this.course,
+  });
 }
 
 class StudentListApp extends StatelessWidget {
@@ -26,23 +38,37 @@ class StudentListApp extends StatelessWidget {
 class StudentsPage extends StatelessWidget {
   const StudentsPage({super.key});
 
-  final List<Map<String, String>> students = const [
-    {
-      'nome': 'Rita Silva',
-      'curso': 'Desenvolvimento de Software',
-    },
-    {
-      'nome': 'João Costa',
-      'curso': 'Redes e Sistemas',
-    },
-    {
-      'nome': 'Inês Lopes',
-      'curso': 'Cibersegurança',
-    },
+  // 2. Criar três objetos Student
+  final List<Student> students = const [
+    Student(
+      id: 1,
+      name: 'Rita',
+      course: 'Programação',
+    ),
+    Student(
+      id: 2,
+      name: 'João',
+      course: 'Redes',
+    ),
+    Student(
+      id: 3,
+      name: 'Inês',
+      course: 'Programação',
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
+    // 3. Filtrar os estudantes do curso Programação
+    final programmingStudents = students
+        .where((s) => s.course == 'Programação')
+        .toList();
+
+    // 4. Criar uma lista apenas com os nomes
+    final names = programmingStudents
+        .map((s) => s.name)
+        .toList();
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF10243A),
@@ -53,7 +79,6 @@ class StudentsPage extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -71,7 +96,7 @@ class StudentsPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Os nossos estudantes',
+                  'Estudantes de Programação',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 23,
@@ -80,7 +105,7 @@ class StudentsPage extends StatelessWidget {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  'Consulta os estudantes e os seus cursos.',
+                  'Lista de nomes filtrados por curso.',
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
@@ -89,11 +114,10 @@ class StudentsPage extends StatelessWidget {
               ],
             ),
           ),
-
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
             child: Text(
-              'ESTUDANTES INSCRITOS',
+              'ESTUDANTES DE PROGRAMAÇÃO',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -102,15 +126,12 @@ class StudentsPage extends StatelessWidget {
               ),
             ),
           ),
-
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: students.length,
+              itemCount: names.length,
               itemBuilder: (context, index) {
-                final student = students[index];
-                final nome = student['nome']!;
-                final curso = student['curso']!;
+                final name = names[index];
 
                 return Card(
                   elevation: 2,
@@ -124,7 +145,6 @@ class StudentsPage extends StatelessWidget {
                       horizontal: 16,
                       vertical: 10,
                     ),
-
                     leading: CircleAvatar(
                       radius: 27,
                       backgroundColor: Colors.teal.shade50,
@@ -134,31 +154,27 @@ class StudentsPage extends StatelessWidget {
                         size: 30,
                       ),
                     ),
-
                     title: Text(
-                      nome,
+                      name,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
-
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 5),
-                      child: Text(curso),
+                    subtitle: const Padding(
+                      padding: EdgeInsets.only(top: 5),
+                      child: Text('Curso: Programação'),
                     ),
-
                     trailing: const Icon(
                       Icons.chevron_right,
                       color: Colors.teal,
                     ),
-
                     onTap: () {
                       ScaffoldMessenger.of(context)
                         ..hideCurrentSnackBar()
                         ..showSnackBar(
                           SnackBar(
-                            content: Text(nome),
+                            content: Text(name),
                             behavior: SnackBarBehavior.floating,
                             duration: const Duration(seconds: 2),
                           ),
@@ -169,9 +185,18 @@ class StudentsPage extends StatelessWidget {
               },
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Total de estudantes: ${names.length}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF10243A),
+              ),
+            ),
+          ),
         ],
       ),
-
       bottomNavigationBar: NavigationBar(
         selectedIndex: 1,
         destinations: const [
