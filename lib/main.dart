@@ -1,185 +1,206 @@
+
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const StudentListApp());
+  runApp(const StudentCardApp());
 }
 
-class StudentListApp extends StatelessWidget {
-  const StudentListApp({super.key});
+class StudentCardApp extends StatelessWidget {
+  const StudentCardApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Lista de Estudantes',
+      title: 'Cartão de Estudante',
       theme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: Colors.teal,
+        scaffoldBackgroundColor: const Color(0xFFF3F6FA),
       ),
-      home: const StudentsPage(),
+      home: const StudentPage(),
     );
   }
 }
 
-class StudentsPage extends StatefulWidget {
-  const StudentsPage({super.key});
-
-  @override
-  State<StudentsPage> createState() => _StudentsPageState();
-}
-
-class _StudentsPageState extends State<StudentsPage> {
-  int selectedIndex = 0;
-
-  final List<Map<String, String>> students = [
-    {
-      'nome': 'Tomás Vilas Boas',
-      'curso': 'Desenvolvimento de Software',
-    },
-    {
-      'nome': 'Rita Silva',
-      'curso': 'Redes e Sistemas',
-    },
-    {
-      'nome': 'João Costa',
-      'curso': 'Cibersegurança',
-    },
-  ];
-
-  void addStudent() {
-    final nomeController = TextEditingController();
-    final cursoController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Novo Estudante'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nomeController,
-                decoration: const InputDecoration(
-                  labelText: 'Nome',
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: cursoController,
-                decoration: const InputDecoration(
-                  labelText: 'Curso',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (nomeController.text.isNotEmpty &&
-                    cursoController.text.isNotEmpty) {
-                  setState(() {
-                    students.add({
-                      'nome': nomeController.text,
-                      'curso': cursoController.text,
-                    });
-                  });
-
-                  Navigator.pop(context);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Estudante adicionado'),
-                    ),
-                  );
-                }
-              },
-              child: const Text('Adicionar'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+class StudentPage extends StatelessWidget {
+  const StudentPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lista de Estudantes'),
+        backgroundColor: const Color(0xFF101A2C),
+        foregroundColor: Colors.white,
         centerTitle: true,
+        title: const Text(
+          'Cartão de Estudante',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
-
-      body: ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: students.length,
-        itemBuilder: (context, index) {
-          final student = students[index];
-
-          return Card(
-            elevation: 4,
-            margin: const EdgeInsets.only(bottom: 12),
-            child: ListTile(
-              leading: const CircleAvatar(
-                child: Icon(Icons.person),
-              ),
-              title: Text(student['nome']!),
-              subtitle: Text(student['curso']!),
-              trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '${student['nome']} - ${student['curso']}',
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Card(
+            elevation: 5,
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'PERFIL DO ESTUDANTE',
+                    style: TextStyle(
+                      color: Colors.teal,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                      fontSize: 12,
                     ),
                   ),
-                );
-              },
-            ),
-          );
-        },
-      ),
 
-      floatingActionButton: FloatingActionButton(
-        onPressed: addStudent,
-        child: const Icon(Icons.add),
-      ),
+                  const SizedBox(height: 24),
 
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            selectedIndex = index;
-          });
+                  const Center(
+                    child: CircleAvatar(
+                      radius: 48,
+                      backgroundColor: Color(0xFFD9F3EF),
+                      child: Icon(
+                        Icons.person,
+                        size: 58,
+                        color: Color(0xFF087F73),
+                      ),
+                    ),
+                  ),
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                ['Início', 'Estudantes', 'Definições'][index],
+                  const SizedBox(height: 20),
+
+                  const Center(
+                    child: Text(
+                      'Tomás Vilas Boas',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF101A2C),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  const Center(
+                    child: Text(
+                      'Desenvolvimento de Software',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  const Divider(),
+
+                  const SizedBox(height: 12),
+
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.school_outlined,
+                        color: Colors.teal,
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Estudante',
+                          style: TextStyle(fontSize: 15),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.verified_user_outlined,
+                        color: Colors.teal,
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Cartão de estudante digital',
+                          style: TextStyle(fontSize: 15),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Perfil do estudante'),
+                            content: const Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                Text('Nome: Tomás Vilas Boas'),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Curso: Desenvolvimento de Software',
+                                ),
+                                SizedBox(height: 8),
+                                Text('Estado: Estudante'),
+                                 SizedBox(height: 8),
+                                Text(
+                                  'Número: 67',
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(context),
+                                child: const Text('Fechar'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.person_outline),
+                      label: const Text('Ver perfil'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF087F73),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          );
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home),
-            label: 'Início',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.people),
-            label: 'Estudantes',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings),
-            label: 'Definições',
-          ),
-        ],
+        ),
       ),
     );
   }
