@@ -1,116 +1,185 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const StudentListApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class StudentListApp extends StatelessWidget {
+  const StudentListApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Student App',
+      title: 'Lista de Estudantes',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-        ),
+        useMaterial3: true,
+        colorSchemeSeed: Colors.teal,
       ),
-      home: const MyHomePage(),
+      home: const StudentsPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+class StudentsPage extends StatefulWidget {
+  const StudentsPage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<StudentsPage> createState() => _StudentsPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _StudentsPageState extends State<StudentsPage> {
+  int selectedIndex = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  final List<Map<String, String>> students = [
+    {
+      'nome': 'Tomás Vilas Boas',
+      'curso': 'Desenvolvimento de Software',
+    },
+    {
+      'nome': 'Rita Silva',
+      'curso': 'Redes e Sistemas',
+    },
+    {
+      'nome': 'João Costa',
+      'curso': 'Cibersegurança',
+    },
+  ];
+
+  void addStudent() {
+    final nomeController = TextEditingController();
+    final cursoController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Novo Estudante'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nomeController,
+                decoration: const InputDecoration(
+                  labelText: 'Nome',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: cursoController,
+                decoration: const InputDecoration(
+                  labelText: 'Curso',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (nomeController.text.isNotEmpty &&
+                    cursoController.text.isNotEmpty) {
+                  setState(() {
+                    students.add({
+                      'nome': nomeController.text,
+                      'curso': cursoController.text,
+                    });
+                  });
+
+                  Navigator.pop(context);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Estudante adicionado'),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Adicionar'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
+      appBar: AppBar(
+        title: const Text('Lista de Estudantes'),
+        centerTitle: true,
+      ),
 
-              const Text(
-                'Hello world!',
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: students.length,
+        itemBuilder: (context, index) {
+          final student = students[index];
+
+          return Card(
+            elevation: 4,
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              leading: const CircleAvatar(
+                child: Icon(Icons.person),
               ),
-
-              const SizedBox(height: 20),
-
-              Image.asset(
-                'assets/messi.png',
-                width: 200,
-                height: 200,
-              ),
-
-              Card(
-                margin: const EdgeInsets.all(20),
-                elevation: 5,
-                child: const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Lionel Messi',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text('Nacionalidade: Argentina'),
-                      Text('Posição: Avançado'),
-                      Text('Bolas de Ouro: 8'),
-                    ],
+              title: Text(student['nome']!),
+              subtitle: Text(student['curso']!),
+              trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      '${student['nome']} - ${student['curso']}',
+                    ),
                   ),
-                ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: addStudent,
+        child: const Icon(Icons.add),
+      ),
+
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: selectedIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            selectedIndex = index;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                ['Início', 'Estudantes', 'Definições'][index],
               ),
-
-              const SizedBox(height: 20),
-
-              const Text(
-                'Aperta o botão se ele é o melhor de todos os tempos',
-                textAlign: TextAlign.center,
-              ),
-
-              const SizedBox(height: 15),
-
-              ElevatedButton(
-                onPressed: _incrementCounter,
-                child: const Text('Votar Messi'),
-              ),
-
-              const SizedBox(height: 15),
-
-              Text(
-                '$_counter',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-
-              const SizedBox(height: 50),
-            ],
+            ),
+          );
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home),
+            label: 'Início',
           ),
-        ),
+          NavigationDestination(
+            icon: Icon(Icons.people),
+            label: 'Estudantes',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings),
+            label: 'Definições',
+          ),
+        ],
       ),
     );
   }
