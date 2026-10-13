@@ -159,7 +159,7 @@ class StudentPage extends StatelessWidget {
                               crossAxisAlignment:
                                   CrossAxisAlignment.start,
                               children: [
-                                Text('Nome: Tomás Vilas Boas'),
+                                Text('Nome: Eduarda Mourão'),
                                 SizedBox(height: 8),
                                 Text(
                                   'Curso: Desenvolvimento de Software',
