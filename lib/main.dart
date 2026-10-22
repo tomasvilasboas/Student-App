@@ -6,7 +6,7 @@ void main() {
 }
 
 // ======================================================
-// MODELO DE ESTUDANTE
+// MODELOS
 // ======================================================
 
 class Student {
@@ -25,8 +25,22 @@ class Student {
   });
 }
 
+class Task {
+  final int id;
+  String title;
+  String description;
+  bool isCompleted;
+
+  Task({
+    required this.id,
+    required this.title,
+    this.description = '',
+    this.isCompleted = false,
+  });
+}
+
 // ======================================================
-// APLICAÇÃO E TEMAS
+// APLICAÇÃO
 // ======================================================
 
 class StudentListApp extends StatefulWidget {
@@ -38,12 +52,6 @@ class StudentListApp extends StatefulWidget {
 
 class _StudentListAppState extends State<StudentListApp> {
   bool darkMode = false;
-
-  void changeTheme(bool value) {
-    setState(() {
-      darkMode = value;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +72,11 @@ class _StudentListAppState extends State<StudentListApp> {
       ),
       home: StudentsPage(
         darkMode: darkMode,
-        onThemeChanged: changeTheme,
+        onThemeChanged: (value) {
+          setState(() {
+            darkMode = value;
+          });
+        },
       ),
     );
   }
@@ -91,6 +103,7 @@ class StudentsPage extends StatefulWidget {
 class _StudentsPageState extends State<StudentsPage> {
   int selectedIndex = 0;
   int nextStudentId = 4;
+  int nextTaskId = 4;
 
   final List<Student> students = [
     Student(
@@ -114,26 +127,23 @@ class _StudentsPageState extends State<StudentsPage> {
     ),
   ];
 
-  final List<Map<String, String>> tasks = [
-    {
-      'title': 'Estudar Flutter',
-      'description': 'Rever os widgets e formulários.',
-    },
-    {
-      'title': 'Fazer exercício',
-      'description': 'Praticar os exercícios da aula.',
-    },
-    {
-      'title': 'Entregar projeto',
-      'description': 'Finalizar e entregar o projeto.',
-    },
+  final List<Task> tasks = [
+    Task(
+      id: 1,
+      title: 'Estudar Flutter',
+      description: 'Rever os widgets e formulários.',
+    ),
+    Task(
+      id: 2,
+      title: 'Fazer exercício',
+      description: 'Praticar os exercícios da aula.',
+    ),
+    Task(
+      id: 3,
+      title: 'Entregar projeto',
+      description: 'Finalizar e entregar o projeto.',
+    ),
   ];
-
-  final List<bool> completedTasks = [false, false, false];
-
-  // ======================================================
-  // MENSAGENS
-  // ======================================================
 
   void showMessage(String message) {
     if (!mounted) return;
@@ -149,7 +159,7 @@ class _StudentsPageState extends State<StudentsPage> {
   }
 
   // ======================================================
-  // ADICIONAR ESTUDANTE
+  // ESTUDANTES
   // ======================================================
 
   Future<void> addStudent() async {
@@ -160,21 +170,13 @@ class _StudentsPageState extends State<StudentsPage> {
 
     if (!mounted || result == null) return;
 
-    final name = result['name']?.trim() ?? '';
-    final number = result['number']?.trim() ?? '';
-    final course = result['course']?.trim() ?? '';
-
-    if (name.isEmpty || number.isEmpty || course.isEmpty) {
-      return;
-    }
-
     setState(() {
       students.add(
         Student(
           id: nextStudentId++,
-          name: name,
-          number: number,
-          course: course,
+          name: result['name']!,
+          number: result['number']!,
+          course: result['course']!,
         ),
       );
     });
@@ -182,35 +184,25 @@ class _StudentsPageState extends State<StudentsPage> {
     showMessage('Estudante adicionado com sucesso!');
   }
 
-  // ======================================================
-  // ELIMINAR ESTUDANTE
-  // ======================================================
-
   Future<void> deleteStudent(Student student) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Eliminar estudante'),
-          content: Text(
-            'Tens a certeza de que queres eliminar ${student.name}?',
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Eliminar estudante'),
+        content: Text(
+          'Tens a certeza de que queres eliminar ${student.name}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(false);
-              },
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(true);
-              },
-              child: const Text('Eliminar'),
-            ),
-          ],
-        );
-      },
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
     );
 
     if (!mounted || confirm != true) return;
@@ -222,129 +214,169 @@ class _StudentsPageState extends State<StudentsPage> {
     showMessage('Estudante eliminado.');
   }
 
+  void showStudentDetails(Student student) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(student.name),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DetailItem(
+              icon: Icons.numbers,
+              label: 'Número',
+              value: student.number,
+            ),
+            const SizedBox(height: 12),
+            DetailItem(
+              icon: Icons.school_outlined,
+              label: 'Curso',
+              value: student.course,
+            ),
+            const SizedBox(height: 12),
+            DetailItem(
+              icon: Icons.check_circle_outline,
+              label: 'Estado',
+              value: student.completed ? 'Concluído' : 'Por concluir',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ======================================================
-  // ADICIONAR TAREFA
+  // TAREFAS — CRIAR
   // ======================================================
 
   Future<void> addTask() async {
-    final result = await showDialog<Map<String, String>>(
-      context: context,
-      builder: (_) => const NewTaskDialog(),
+    final result = await Navigator.push<Task>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const TaskFormPage(),
+      ),
     );
 
     if (!mounted || result == null) return;
 
-    final title = result['title']?.trim() ?? '';
-    final description = result['description']?.trim() ?? '';
-
-    if (title.isEmpty) return;
-
     setState(() {
-      tasks.add({
-        'title': title,
-        'description': description,
-      });
-
-      completedTasks.add(false);
+      tasks.add(
+        Task(
+          id: nextTaskId++,
+          title: result.title,
+          description: result.description,
+          isCompleted: false,
+        ),
+      );
     });
 
     showMessage('Tarefa adicionada com sucesso!');
   }
 
   // ======================================================
-  // ELIMINAR TAREFA
+  // TAREFAS — EDITAR
   // ======================================================
 
-  Future<void> deleteTask(int index) async {
-    if (index < 0 || index >= tasks.length) return;
+  Future<void> editTask(Task task) async {
+    final result = await Navigator.push<Task>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TaskFormPage(task: task),
+      ),
+    );
 
-    final taskTitle = tasks[index]['title'] ?? 'esta tarefa';
+    if (!mounted || result == null) return;
 
+    final index = tasks.indexWhere((item) => item.id == task.id);
+
+    if (index == -1) return;
+
+    setState(() {
+      tasks[index] = Task(
+        id: task.id,
+        title: result.title,
+        description: result.description,
+        isCompleted: task.isCompleted,
+      );
+    });
+
+    showMessage('Tarefa atualizada com sucesso!');
+  }
+
+  // ======================================================
+  // TAREFAS — CONCLUIR
+  // ======================================================
+
+  void toggleTask(Task task, bool? value) {
+    setState(() {
+      task.isCompleted = value ?? false;
+    });
+  }
+
+  // ======================================================
+  // TAREFAS — ELIMINAR
+  // ======================================================
+
+  Future<void> deleteTask(Task task) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Eliminar tarefa'),
-          content: Text('Queres eliminar "$taskTitle"?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(false);
-              },
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(true);
-              },
-              child: const Text('Eliminar'),
-            ),
-          ],
-        );
-      },
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Eliminar tarefa'),
+        content: Text(
+          'Queres eliminar "${task.title}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
     );
 
     if (!mounted || confirm != true) return;
-    if (index >= tasks.length) return;
 
     setState(() {
-      tasks.removeAt(index);
-      completedTasks.removeAt(index);
+      tasks.removeWhere((item) => item.id == task.id);
     });
 
     showMessage('Tarefa eliminada.');
   }
 
   // ======================================================
-  // DETALHES DO ESTUDANTE
+  // NAVEGAR PARA DETALHES
   // ======================================================
 
-  void showStudentDetails(Student student) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(student.name),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DetailItem(
-                icon: Icons.numbers,
-                label: 'Número',
-                value: student.number,
-              ),
-              const SizedBox(height: 12),
-              DetailItem(
-                icon: Icons.school_outlined,
-                label: 'Curso',
-                value: student.course,
-              ),
-              const SizedBox(height: 12),
-              DetailItem(
-                icon: Icons.check_circle_outline,
-                label: 'Estado',
-                value: student.completed
-                    ? 'Concluído'
-                    : 'Por concluir',
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-              child: const Text('Fechar'),
-            ),
-          ],
-        );
-      },
+  Future<void> openTaskDetails(Task task) async {
+    final action = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TaskDetailPage(task: task),
+      ),
     );
+
+    if (!mounted) return;
+
+    if (action == 'edit') {
+      await editTask(task);
+    } else if (action == 'delete') {
+      await deleteTask(task);
+    }
   }
 
   // ======================================================
-  // PÁGINA INICIAL
+  // HOME
   // ======================================================
 
   Widget buildHomePage() {
@@ -352,7 +384,7 @@ class _StudentsPageState extends State<StudentsPage> {
         students.where((student) => student.completed).length;
 
     final completedTaskCount =
-        completedTasks.where((completed) => completed).length;
+        tasks.where((task) => task.isCompleted).length;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -374,11 +406,7 @@ class _StudentsPageState extends State<StudentsPage> {
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.school,
-                color: Colors.white,
-                size: 42,
-              ),
+              Icon(Icons.school, color: Colors.white, size: 42),
               SizedBox(height: 16),
               Text(
                 'Bem-vindo!',
@@ -391,10 +419,7 @@ class _StudentsPageState extends State<StudentsPage> {
               SizedBox(height: 8),
               Text(
                 'Gere os teus estudantes e acompanha as tuas tarefas.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 15),
               ),
             ],
           ),
@@ -402,10 +427,7 @@ class _StudentsPageState extends State<StudentsPage> {
         const SizedBox(height: 20),
         const Text(
           'Resumo',
-          style: TextStyle(
-            fontSize: 21,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Row(
@@ -453,15 +475,9 @@ class _StudentsPageState extends State<StudentsPage> {
               child: Icon(Icons.people_outline),
             ),
             title: const Text('Gerir estudantes'),
-            subtitle: const Text(
-              'Consultar e adicionar estudantes',
-            ),
+            subtitle: const Text('Consultar e adicionar estudantes'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              setState(() {
-                selectedIndex = 1;
-              });
-            },
+            onTap: () => setState(() => selectedIndex = 1),
           ),
         ),
         Card(
@@ -470,23 +486,49 @@ class _StudentsPageState extends State<StudentsPage> {
               child: Icon(Icons.checklist),
             ),
             title: const Text('Gerir tarefas'),
-            subtitle: const Text(
-              'Adicionar e concluir tarefas',
-            ),
+            subtitle: const Text('Criar, consultar e editar tarefas'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              setState(() {
-                selectedIndex = 2;
-              });
-            },
+            onTap: () => setState(() => selectedIndex = 2),
           ),
         ),
+        const SizedBox(height: 12),
+        const Text(
+          'Tarefas recentes',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        if (tasks.isEmpty)
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Center(
+                child: Text('Ainda não existem tarefas.'),
+              ),
+            ),
+          )
+        else
+          ...tasks.take(3).map(
+            (task) => Card(
+              child: ListTile(
+                leading: Icon(
+                  task.isCompleted
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                ),
+                title: Text(task.title),
+                subtitle: Text(
+                  task.isCompleted ? 'Concluída' : 'Por concluir',
+                ),
+                onTap: () => openTaskDetails(task),
+              ),
+            ),
+          ),
       ],
     );
   }
 
   // ======================================================
-  // PÁGINA DE ESTUDANTES
+  // LISTA DE ESTUDANTES
   // ======================================================
 
   Widget buildStudentsPage() {
@@ -516,17 +558,11 @@ class _StudentsPageState extends State<StudentsPage> {
               vertical: 6,
             ),
             leading: CircleAvatar(
-              child: Text(
-                student.name.isNotEmpty
-                    ? student.name[0].toUpperCase()
-                    : '?',
-              ),
+              child: Text(student.name[0].toUpperCase()),
             ),
             title: Text(
               student.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
               '${student.number}\n${student.course}',
@@ -548,47 +584,22 @@ class _StudentsPageState extends State<StudentsPage> {
                   });
                 }
               },
-              itemBuilder: (context) => [
+              itemBuilder: (_) => [
                 const PopupMenuItem(
                   value: 'details',
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline),
-                      SizedBox(width: 8),
-                      Text('Detalhes'),
-                    ],
-                  ),
+                  child: Text('Detalhes'),
                 ),
                 PopupMenuItem(
                   value: 'completed',
-                  child: Row(
-                    children: [
-                      Icon(
-                        student.completed
-                            ? Icons.undo
-                            : Icons.check_circle_outline,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        student.completed
-                            ? 'Marcar por concluir'
-                            : 'Marcar concluído',
-                      ),
-                    ],
+                  child: Text(
+                    student.completed
+                        ? 'Marcar por concluir'
+                        : 'Marcar concluído',
                   ),
                 ),
                 const PopupMenuItem(
                   value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.delete_outline,
-                        color: Colors.red,
-                      ),
-                      SizedBox(width: 8),
-                      Text('Eliminar'),
-                    ],
-                  ),
+                  child: Text('Eliminar'),
                 ),
               ],
             ),
@@ -599,21 +610,36 @@ class _StudentsPageState extends State<StudentsPage> {
   }
 
   // ======================================================
-  // PÁGINA DE TAREFAS
+  // LISTA DE TAREFAS
   // ======================================================
 
   Widget buildTasksPage() {
     if (tasks.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.task_alt, size: 60),
-            SizedBox(height: 12),
-            Text('Ainda não existem tarefas.'),
-            SizedBox(height: 6),
-            Text('Carrega no botão + para adicionar uma.'),
-          ],
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.task_alt, size: 64),
+              const SizedBox(height: 16),
+              const Text(
+                'Ainda não existem tarefas.',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text('Cria a tua primeira tarefa para começar.'),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: addTask,
+                icon: const Icon(Icons.add),
+                label: const Text('Nova tarefa'),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -623,48 +649,31 @@ class _StudentsPageState extends State<StudentsPage> {
       itemCount: tasks.length,
       itemBuilder: (context, index) {
         final task = tasks[index];
-        final title = task['title'] ?? 'Sem título';
-        final description = task['description'] ?? '';
-        final isCompleted = completedTasks[index];
 
         return Card(
-          child: CheckboxListTile(
-            value: isCompleted,
-            controlAffinity: ListTileControlAffinity.leading,
-            onChanged: (value) {
-              setState(() {
-                completedTasks[index] = value ?? false;
-              });
-            },
+          child: ListTile(
+            leading: Checkbox(
+              value: task.isCompleted,
+              onChanged: (value) => toggleTask(task, value),
+            ),
             title: Text(
-              title,
+              task.title,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                decoration: isCompleted
+                decoration: task.isCompleted
                     ? TextDecoration.lineThrough
                     : TextDecoration.none,
               ),
             ),
-            subtitle: description.isEmpty
-                ? Text(
-                    isCompleted ? 'Concluída' : 'Por concluir',
-                  )
-                : Text(
-                    description,
-                    style: TextStyle(
-                      decoration: isCompleted
-                          ? TextDecoration.lineThrough
-                          : TextDecoration.none,
-                    ),
-                  ),
-            secondary: IconButton(
-              tooltip: 'Eliminar tarefa',
-              icon: const Icon(
-                Icons.delete_outline,
-                color: Colors.red,
-              ),
-              onPressed: () => deleteTask(index),
+            subtitle: Text(
+              task.description.isEmpty
+                  ? (task.isCompleted ? 'Concluída' : 'Por concluir')
+                  : task.description,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => openTaskDetails(task),
           ),
         );
       },
@@ -681,9 +690,7 @@ class _StudentsPageState extends State<StudentsPage> {
       children: [
         const Card(
           child: ListTile(
-            leading: CircleAvatar(
-              child: Icon(Icons.settings),
-            ),
+            leading: CircleAvatar(child: Icon(Icons.settings)),
             title: Text('Definições'),
             subtitle: Text('Personaliza a aplicação'),
           ),
@@ -693,9 +700,7 @@ class _StudentsPageState extends State<StudentsPage> {
           child: SwitchListTile(
             secondary: const Icon(Icons.dark_mode_outlined),
             title: const Text('Modo escuro'),
-            subtitle: const Text(
-              'Alterar o tema da aplicação',
-            ),
+            subtitle: const Text('Alterar o tema da aplicação'),
             value: widget.darkMode,
             onChanged: widget.onThemeChanged,
           ),
@@ -704,26 +709,14 @@ class _StudentsPageState extends State<StudentsPage> {
           child: ListTile(
             leading: const Icon(Icons.people_outline),
             title: const Text('Total de estudantes'),
-            trailing: Text(
-              '${students.length}',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            trailing: Text('${students.length}'),
           ),
         ),
         Card(
           child: ListTile(
             leading: const Icon(Icons.checklist),
             title: const Text('Total de tarefas'),
-            trailing: Text(
-              '${tasks.length}',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            trailing: Text('${tasks.length}'),
           ),
         ),
         const SizedBox(height: 24),
@@ -768,8 +761,7 @@ class _StudentsPageState extends State<StudentsPage> {
       floatingActionButton:
           selectedIndex == 1 || selectedIndex == 2
               ? FloatingActionButton.extended(
-                  onPressed:
-                      selectedIndex == 1 ? addStudent : addTask,
+                  onPressed: selectedIndex == 1 ? addStudent : addTask,
                   icon: const Icon(Icons.add),
                   label: Text(
                     selectedIndex == 1
@@ -813,16 +805,14 @@ class _StudentsPageState extends State<StudentsPage> {
 }
 
 // ======================================================
-// FORMULÁRIO DE NOVO ESTUDANTE
-// Os controladores pertencem exclusivamente a este widget.
+// FORMULÁRIO DE ESTUDANTE
 // ======================================================
 
 class NewStudentDialog extends StatefulWidget {
   const NewStudentDialog({super.key});
 
   @override
-  State<NewStudentDialog> createState() =>
-      _NewStudentDialogState();
+  State<NewStudentDialog> createState() => _NewStudentDialogState();
 }
 
 class _NewStudentDialogState extends State<NewStudentDialog> {
@@ -840,11 +830,9 @@ class _NewStudentDialogState extends State<NewStudentDialog> {
   }
 
   void _submit() {
-    if (!(_formKey.currentState?.validate() ?? false)) {
-      return;
-    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    Navigator.of(context).pop(<String, String>{
+    Navigator.pop(context, <String, String>{
       'name': _nameController.text.trim(),
       'number': _numberController.text.trim(),
       'course': _courseController.text.trim(),
@@ -864,18 +852,14 @@ class _NewStudentDialogState extends State<NewStudentDialog> {
               TextFormField(
                 controller: _nameController,
                 autofocus: true,
-                textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(
                   labelText: 'Nome',
-                  prefixIcon: Icon(Icons.person_outline),
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Introduz o nome.';
-                  }
-                  return null;
-                },
+                validator: (value) =>
+                    value == null || value.trim().isEmpty
+                        ? 'Introduz o nome.'
+                        : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -883,31 +867,24 @@ class _NewStudentDialogState extends State<NewStudentDialog> {
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'Número',
-                  prefixIcon: Icon(Icons.numbers),
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Introduz o número.';
-                  }
-                  return null;
-                },
+                validator: (value) =>
+                    value == null || value.trim().isEmpty
+                        ? 'Introduz o número.'
+                        : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _courseController,
-                textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(
                   labelText: 'Curso',
-                  prefixIcon: Icon(Icons.school_outlined),
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Introduz o curso.';
-                  }
-                  return null;
-                },
+                validator: (value) =>
+                    value == null || value.trim().isEmpty
+                        ? 'Introduz o curso.'
+                        : null,
               ),
             ],
           ),
@@ -915,13 +892,12 @@ class _NewStudentDialogState extends State<NewStudentDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
-        FilledButton.icon(
+        FilledButton(
           onPressed: _submit,
-          icon: const Icon(Icons.add),
-          label: const Text('Adicionar'),
+          child: const Text('Adicionar'),
         ),
       ],
     );
@@ -929,21 +905,37 @@ class _NewStudentDialogState extends State<NewStudentDialog> {
 }
 
 // ======================================================
-// FORMULÁRIO DE NOVA TAREFA
-// Os controladores pertencem exclusivamente a este widget.
+// FORMULÁRIO DE TAREFA — NOVA E EDIÇÃO
 // ======================================================
 
-class NewTaskDialog extends StatefulWidget {
-  const NewTaskDialog({super.key});
+class TaskFormPage extends StatefulWidget {
+  final Task? task;
+
+  const TaskFormPage({super.key, this.task});
 
   @override
-  State<NewTaskDialog> createState() => _NewTaskDialogState();
+  State<TaskFormPage> createState() => _TaskFormPageState();
 }
 
-class _NewTaskDialogState extends State<NewTaskDialog> {
+class _TaskFormPageState extends State<TaskFormPage> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  late final TextEditingController _titleController;
+  late final TextEditingController _descriptionController;
+
+  bool get isEditing => widget.task != null;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _titleController = TextEditingController(
+      text: widget.task?.title ?? '',
+    );
+
+    _descriptionController = TextEditingController(
+      text: widget.task?.description ?? '',
+    );
+  }
 
   @override
   void dispose() {
@@ -952,73 +944,251 @@ class _NewTaskDialogState extends State<NewTaskDialog> {
     super.dispose();
   }
 
-  void _submit() {
-    if (!(_formKey.currentState?.validate() ?? false)) {
-      return;
-    }
+  void _saveTask() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    Navigator.of(context).pop(<String, String>{
-      'title': _titleController.text.trim(),
-      'description': _descriptionController.text.trim(),
-    });
+    final task = Task(
+      id: widget.task?.id ?? 0,
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      isCompleted: widget.task?.isCompleted ?? false,
+    );
+
+    Navigator.pop(context, task);
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Nova tarefa'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _titleController,
-                autofocus: true,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'Título da tarefa *',
-                  hintText: 'Ex.: Estudar Flutter',
-                  prefixIcon: Icon(Icons.task_alt),
-                  border: OutlineInputBorder(),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(isEditing ? 'Editar tarefa' : 'Nova tarefa'),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(
+                  isEditing ? Icons.edit_note : Icons.add_task,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'O título é obrigatório.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                textCapitalization: TextCapitalization.sentences,
-                minLines: 2,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Descrição (opcional)',
-                  hintText: 'Descreve a tarefa...',
-                  prefixIcon: Icon(Icons.description_outlined),
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
+                const SizedBox(height: 24),
+                TextFormField(
+                  controller: _titleController,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.sentences,
+                  maxLength: 100,
+                  decoration: const InputDecoration(
+                    labelText: 'Título *',
+                    hintText: 'Ex.: Estudar Flutter',
+                    prefixIcon: Icon(Icons.title),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'O título é obrigatório.';
+                    }
+
+                    return null;
+                  },
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _descriptionController,
+                  textCapitalization: TextCapitalization.sentences,
+                  minLines: 3,
+                  maxLines: 6,
+                  maxLength: 500,
+                  decoration: const InputDecoration(
+                    labelText: 'Descrição (opcional)',
+                    hintText: 'Descreve a tarefa...',
+                    prefixIcon: Icon(Icons.description_outlined),
+                    border: OutlineInputBorder(),
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: _saveTask,
+                  icon: Icon(isEditing ? Icons.save : Icons.add),
+                  label: Text(
+                    isEditing ? 'Guardar alterações' : 'Criar tarefa',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
+    );
+  }
+}
+
+// ======================================================
+// DETALHES DA TAREFA
+// ======================================================
+
+class TaskDetailPage extends StatelessWidget {
+  final Task task;
+
+  const TaskDetailPage({
+    super.key,
+    required this.task,
+  });
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Eliminar tarefa'),
+        content: Text('Queres eliminar "${task.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (context.mounted && confirm == true) {
+      Navigator.pop(context, 'delete');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Detalhes da tarefa'),
+        actions: [
+          IconButton(
+            tooltip: 'Editar tarefa',
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => Navigator.pop(context, 'edit'),
+          ),
+          IconButton(
+            tooltip: 'Eliminar tarefa',
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => _confirmDelete(context),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      task.isCompleted
+                          ? Icons.check_circle
+                          : Icons.assignment_outlined,
+                      size: 48,
+                      color: task.isCompleted
+                          ? Colors.green
+                          : theme.colorScheme.primary,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      task.title,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Descrição',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      task.description.isEmpty
+                          ? 'Sem descrição.'
+                          : task.description,
+                      style: theme.textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Estado',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          task.isCompleted
+                              ? Icons.check_circle
+                              : Icons.pending_outlined,
+                          color: task.isCompleted
+                              ? Colors.green
+                              : Colors.orange,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          task.isCompleted ? 'Concluída' : 'Por concluir',
+                          style: theme.textTheme.bodyLarge,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () {
+                task.isCompleted = !task.isCompleted;
+                Navigator.pop(context, 'refresh');
+              },
+              icon: Icon(
+                task.isCompleted
+                    ? Icons.undo
+                    : Icons.check_circle_outline,
+              ),
+              label: Text(
+                task.isCompleted
+                    ? 'Marcar por concluir'
+                    : 'Marcar como concluída',
+              ),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.pop(context, 'edit'),
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Editar tarefa'),
+            ),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () => _confirmDelete(context),
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('Eliminar tarefa'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+            ),
+          ],
         ),
-        FilledButton.icon(
-          onPressed: _submit,
-          icon: const Icon(Icons.add),
-          label: const Text('Adicionar tarefa'),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -1051,10 +1221,9 @@ class SummaryCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               value,
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 4),
             Text(title),
@@ -1066,7 +1235,7 @@ class SummaryCard extends StatelessWidget {
 }
 
 // ======================================================
-// ITEM DE DETALHE
+// ITEM DE DETALHE DO ESTUDANTE
 // ======================================================
 
 class DetailItem extends StatelessWidget {
@@ -1099,9 +1268,7 @@ class DetailItem extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 value,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w500),
               ),
             ],
           ),
